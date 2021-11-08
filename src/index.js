@@ -10,19 +10,69 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const {username} = request.headers;
+
+  const userValidation = users.find(user => user.username === username);
+
+  if(userValidation){
+    request.user = userValidation;
+    next()
+  }
+  return response.status(404).json({error : "Invalid username!"});
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const user = request.user;
+
+  const numberTodosUser = user.todos.length;
+
+  if(user.pro || numberTodosUser < 10){
+    next();
+  }
+
+  return response.status(403).json({ error : "User's account exceed the max todo available."})
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const {id} = request.params;
+  const {username} = request.headers;
+
+  const userValidation = users.find(user => user.username === username);
+
+  if(!userValidation){
+    return response.status(404).json({error : "Invalid username!"});
+  }
+
+  
+  const checkIfTodoIdIsUuid = validate(id);
+  
+  if(!checkIfTodoIdIsUuid){
+    return response.status(400).json({error : "Invalid Id!"});
+  }
+
+  
+  const todoValidation = userValidation.todos.find(todo => todo.id === id);
+  
+  if(todoValidation) {
+    request.user = userValidation;
+    request.todo = todoValidation;
+    next();
+  }
+
+  return response.status(404).json({error : "Invalid Id!"});
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const {id} = request.params;
+
+  const userValidation = users.find(user => user.id === id);
+
+  if(userValidation){
+    request.user = userValidation;
+    
+    next()
+  }
+  return response.status(404).json({ error : "User Id is invalid!"})
 }
 
 app.post('/users', (request, response) => {
